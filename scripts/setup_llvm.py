@@ -1,5 +1,6 @@
 import subprocess as sp
 from pathlib import Path
+import os
 
 from fire import Fire
 from loguru import logger
@@ -77,164 +78,29 @@ def setup_llvm(llvm_dir_str: str):
     cmakefile = (
         llvm_dir / "clang" / "lib" / "StaticAnalyzer" / "Checkers" / "CMakeLists.txt"
     )
-    new_cmakefile_content = """\
-set(LLVM_LINK_COMPONENTS
-  FrontendOpenMP
-  Support
-  TargetParser
-  )
 
-add_clang_library(clangStaticAnalyzerCheckers
-  AnalysisOrderChecker.cpp
-  AnalyzerStatsChecker.cpp
-  ArrayBoundChecker.cpp
-  ArrayBoundCheckerV2.cpp
-  BasicObjCFoundationChecks.cpp
-  BitwiseShiftChecker.cpp
-  BlockInCriticalSectionChecker.cpp
-  BoolAssignmentChecker.cpp
-  BuiltinFunctionChecker.cpp
-  CStringChecker.cpp
-  CStringSyntaxChecker.cpp
-  CallAndMessageChecker.cpp
-  CastSizeChecker.cpp
-  CastToStructChecker.cpp
-  CastValueChecker.cpp
-  CheckObjCDealloc.cpp
-  CheckObjCInstMethSignature.cpp
-  CheckPlacementNew.cpp
-  CheckSecuritySyntaxOnly.cpp
-  CheckSizeofPointer.cpp
-  CheckerDocumentation.cpp
-  ChrootChecker.cpp
-  CloneChecker.cpp
-  ContainerModeling.cpp
-  ConversionChecker.cpp
-  CXXDeleteChecker.cpp
-  CXXSelfAssignmentChecker.cpp
-  DeadStoresChecker.cpp
-  DebugCheckers.cpp
-  DebugContainerModeling.cpp
-  DebugIteratorModeling.cpp
-  DereferenceChecker.cpp
-  DirectIvarAssignment.cpp
-  DivZeroChecker.cpp
-  DynamicTypePropagation.cpp
-  DynamicTypeChecker.cpp
-  EnumCastOutOfRangeChecker.cpp
-  ErrnoChecker.cpp
-  ErrnoModeling.cpp
-  ErrnoTesterChecker.cpp
-  ExprInspectionChecker.cpp
-  FixedAddressChecker.cpp
-  FuchsiaHandleChecker.cpp
-  GCDAntipatternChecker.cpp
-  GenericTaintChecker.cpp
-  GTestChecker.cpp
-  IdenticalExprChecker.cpp
-  InnerPointerChecker.cpp
-  InvalidatedIteratorChecker.cpp
-  cert/InvalidPtrChecker.cpp
-  Iterator.cpp
-  IteratorModeling.cpp
-  IteratorRangeChecker.cpp
-  IvarInvalidationChecker.cpp
-  LLVMConventionsChecker.cpp
-  LocalizationChecker.cpp
-  MacOSKeychainAPIChecker.cpp
-  MacOSXAPIChecker.cpp
-  MallocChecker.cpp
-  MallocOverflowSecurityChecker.cpp
-  MallocSizeofChecker.cpp
-  MismatchedIteratorChecker.cpp
-  MmapWriteExecChecker.cpp
-  MIGChecker.cpp
-  MoveChecker.cpp
-  MPI-Checker/MPIBugReporter.cpp
-  MPI-Checker/MPIChecker.cpp
-  MPI-Checker/MPIFunctionClassifier.cpp
-  NSAutoreleasePoolChecker.cpp
-  NSErrorChecker.cpp
-  NoReturnFunctionChecker.cpp
-  NonNullParamChecker.cpp
-  NonnullGlobalConstantsChecker.cpp
-  NullabilityChecker.cpp
-  NumberObjectConversionChecker.cpp
-  ObjCAtSyncChecker.cpp
-  ObjCAutoreleaseWriteChecker.cpp
-  ObjCContainersASTChecker.cpp
-  ObjCContainersChecker.cpp
-  ObjCMissingSuperCallChecker.cpp
-  ObjCPropertyChecker.cpp
-  ObjCSelfInitChecker.cpp
-  ObjCSuperDeallocChecker.cpp
-  ObjCUnusedIVarsChecker.cpp
-  OSObjectCStyleCast.cpp
-  PaddingChecker.cpp
-  PointerArithChecker.cpp
-  PointerIterationChecker.cpp
-  PointerSortingChecker.cpp
-  PointerSubChecker.cpp
-  PthreadLockChecker.cpp
-  cert/PutenvWithAutoChecker.cpp
-  RetainCountChecker/RetainCountChecker.cpp
-  RetainCountChecker/RetainCountDiagnostics.cpp
-  ReturnPointerRangeChecker.cpp
-  ReturnUndefChecker.cpp
-  ReturnValueChecker.cpp
-  RunLoopAutoreleaseLeakChecker.cpp
-  SimpleStreamChecker.cpp
-  SmartPtrChecker.cpp
-  SmartPtrModeling.cpp
-  StackAddrEscapeChecker.cpp
-  StdLibraryFunctionsChecker.cpp
-  StdVariantChecker.cpp
-  STLAlgorithmModeling.cpp
-  StreamChecker.cpp
-  StringChecker.cpp
-  Taint.cpp
-  TaintTesterChecker.cpp
-  TestAfterDivZeroChecker.cpp
-  TraversalChecker.cpp
-  TrustNonnullChecker.cpp
-  TrustReturnsNonnullChecker.cpp
-  UndefBranchChecker.cpp
-  UndefCapturedBlockVarChecker.cpp
-  UndefResultChecker.cpp
-  UndefinedArraySubscriptChecker.cpp
-  UndefinedAssignmentChecker.cpp
-  UndefinedNewArraySizeChecker.cpp
-  UninitializedObject/UninitializedObjectChecker.cpp
-  UninitializedObject/UninitializedPointee.cpp
-  UnixAPIChecker.cpp
-  UnreachableCodeChecker.cpp
-  VforkChecker.cpp
-  VLASizeChecker.cpp
-  ValistChecker.cpp
-  VirtualCallChecker.cpp
-  WebKit/NoUncountedMembersChecker.cpp
-  WebKit/ASTUtils.cpp
-  WebKit/PtrTypesSemantics.cpp
-  WebKit/RefCntblBaseVirtualDtorChecker.cpp
-  WebKit/UncountedCallArgsChecker.cpp
-  WebKit/UncountedLambdaCapturesChecker.cpp
-  WebKit/UncountedLocalVarsChecker.cpp
-  utility.cpp
+    
+    cmakefileold = f"{cmakefile}.old"
+    os.rename(cmakefile, cmakefileold)
 
-  LINK_LIBS
-  clangAST
-  clangASTMatchers
-  clangAnalysis
-  clangBasic
-  clangLex
-  clangStaticAnalyzerCore
+    # Add utility.cpp in right file at the right place
+    with open(cmakefileold, 'r') as file:
+        oldlines = file.readlines()
 
-  DEPENDS
-  omp_gen
-  ClangDriverOptions
-  )
-"""
-    cmakefile.write_text(new_cmakefile_content)
+    # Open the file in write mode and write the modified lines back to it
+    new_content = "utility.cpp"
+
+    with open(cmakefile, 'w') as file:
+        appended = False
+        for line in oldlines:
+            if not appended and line.strip().endswith(".cpp"):
+                file.write("  " + new_content + "\n")
+                appended = True
+            file.write(line)
+
+    file.close()
+    os.remove(cmakefileold)
+
 
     # Build the LLVM
     logger.info("Building LLVM...")

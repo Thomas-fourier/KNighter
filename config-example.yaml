@@ -1,6 +1,6 @@
-result_dir: "/absolute-patch/results/debug"
-LLVM_dir: "/absolute-patch/llvm"
+result_dir: "/data/debug"
+LLVM_dir: "/data/llvm"
 checker_nums: 10
-linux_dir: "/absolute-patch/linux"
+linux_dir: "/data/linux"
 key_file: "llm_keys.yaml"
 model: "o3-mini"

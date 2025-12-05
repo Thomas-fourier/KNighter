@@ -70,10 +70,11 @@ def main(mode: str, *args, **kwargs):
         )
 
     # Get configuration file
-    config_file = kwargs.get("config_file", "config.json")
+    config_file = kwargs.get("config_file", "config.yaml")
     init_config(config_file)
     # Delete the config_file from the kwargs
-    del kwargs["config_file"]
+    if "config_file" in kwargs:
+        del kwargs["config_file"]
     init_llm()
 
     func, description = modes[mode]

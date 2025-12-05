@@ -12,3 +12,4 @@ azure-ai-inference
 google-genai
 bs4
 psutil
+numpy

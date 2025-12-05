@@ -68,7 +68,7 @@ def init_llm():
     logger.info(f"Init LLM with model: {model_config['model']}")
 
     if not clients:
-        raise ValueError("No LLM clients configured")
+        logger.warning("No LLM clients configured")
 
 
 def get_client_and_model(model_name: str) -> tuple:

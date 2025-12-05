@@ -18,11 +18,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     ninja-build \
-    clang \
+    clang-15 \
     libclang-dev \
-    llvm \
-    llvm-dev \
-    lld \
+    llvm-15 \
+    llvm-15-dev \
+    lld-15 \
     libc6-dev \
     binutils \
     zlib1g-dev \
@@ -45,6 +45,11 @@ RUN apt-get update && apt-get install -y \
     cpio \
     && rm -rf /var/lib/apt/lists/*
 
+RUN ln /usr/bin/clang-15 /usr/bin/clang
+RUN ln /usr/bin/lld-15 /usr/bin/lld
+RUN ln /usr/bin/lld /usr/bin/ld.lld
+ 
+
 # Install Oh My Zsh for prettier shell
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
@@ -62,23 +67,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy the project
-COPY . .
-
-# Initialize git submodules (for tree-sitter) - handle both git repo and archive cases
-RUN if [ -d .git ]; then \
-        git submodule update --init --recursive; \
-    else \
-        echo "Not a git repo, checking tree-sitter-cpp..."; \
-        if [ ! -d "src/kparser/tree-sitter-cpp/.git" ]; then \
-            echo "Setting up tree-sitter-cpp..."; \
-            cd src/kparser && \
-            rm -rf tree-sitter-cpp && \
-            git clone https://github.com/tree-sitter/tree-sitter-cpp.git; \
-        else \
-            echo "tree-sitter-cpp already exists"; \
-        fi; \
-    fi
 
 # Set back to main working directory
 WORKDIR /app
